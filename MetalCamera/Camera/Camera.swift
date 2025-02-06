@@ -50,7 +50,7 @@ class Camera : NSObject , Producer{
         label: "cameraFrameProcessingQueue",
         attributes: [])
     
-    init(location: PhysicalCameraLocation = .backFacing) throws{
+    init(sessionPreset: AVCaptureSession.Preset , location: PhysicalCameraLocation = .backFacing) throws{
         self.location = location
         self.captureSession = AVCaptureSession()
         self.captureSession.beginConfiguration()
@@ -80,7 +80,7 @@ class Camera : NSObject , Producer{
             fatalError("Can not add videoOutput")
         }
         
-        captureSession.sessionPreset = .hd1920x1080
+        captureSession.sessionPreset = sessionPreset
         captureSession.commitConfiguration()
         
         super.init()

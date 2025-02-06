@@ -18,9 +18,9 @@ class ViewController: UIViewController {
         renderView.frame = self.view.frame
         self.view.addSubview(renderView)
         do {
-            camera = try Camera()
+            camera = try Camera(sessionPreset: .photo , location: .frontFacing)
             camera.addTarget(renderView)
-            DispatchQueue.global(qos: .background).async { self.camera.startCapture() }
+            self.camera.startCapture()
 
             
         } catch {
