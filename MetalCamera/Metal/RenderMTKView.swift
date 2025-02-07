@@ -70,7 +70,6 @@ extension RenderMTKView : Consumer  {
     override func draw(_ rect: CGRect) {
         if let currentDrawable = self.currentDrawable , let imageTexture = self.currentTexture {
             let commandBuffer = MetalManager.shared.commandQueue.makeCommandBuffer()
-            //对于最后一个consumer来说，没有下一层consumer，这个texture没什么作用
             let outputTexture = MetalTexture(orientation: .portrait, texture: currentDrawable.texture)
             commandBuffer?.renderQuad(
                 pipelineState: renderPipelineState, inputTextures: [0: imageTexture],

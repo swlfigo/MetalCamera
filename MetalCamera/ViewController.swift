@@ -10,6 +10,7 @@ import UIKit
 class ViewController: UIViewController {
 
     let renderView = RenderMTKView()
+    let baseFilter = BaseFilter(fragmentFunctionName: "passthroughFragment")
     var camera : Camera!
     
     override func viewDidLoad() {
@@ -18,8 +19,9 @@ class ViewController: UIViewController {
         renderView.frame = self.view.frame
         self.view.addSubview(renderView)
         do {
-            camera = try Camera(sessionPreset: .photo , location: .frontFacing)
-            camera.addTarget(renderView)
+            camera = try Camera(sessionPreset: .high , location: .frontFacing)
+            camera.addTarget(baseFilter)
+            baseFilter.addTarget(renderView)
             self.camera.startCapture()
 
             

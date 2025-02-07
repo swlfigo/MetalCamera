@@ -11,7 +11,7 @@ public enum ImageOrientation {
     case portraitUpsideDown
     case landscapeLeft
     case landscapeRight
-
+    
     func rotationNeeded(for targetOrientation: ImageOrientation) -> Rotation {
         switch (self, targetOrientation) {
         case (.portrait, .portrait), (.portraitUpsideDown, .portraitUpsideDown),
@@ -20,7 +20,7 @@ public enum ImageOrientation {
         case (.portrait, .portraitUpsideDown): return .rotate180
         case (.portraitUpsideDown, .portrait): return .rotate180
         case (.portrait, .landscapeLeft): return .rotateCounterclockwise
-        case (.landscapeLeft, .portrait): return .rotateClockwiseAndFlipVertically 
+        case (.landscapeLeft, .portrait): return .rotateClockwiseAndFlipVertically
         case (.portrait, .landscapeRight): return .rotateClockwise
         case (.landscapeRight, .portrait): return .rotateCounterclockwise
         case (.landscapeLeft, .landscapeRight): return .rotate180
@@ -42,12 +42,12 @@ public enum Rotation {
     case flipVertically
     case rotateClockwiseAndFlipVertically
     case rotateClockwiseAndFlipHorizontally
-
+    
     func flipsDimensions() -> Bool {
         switch self {
         case .noRotation, .rotate180, .flipHorizontally, .flipVertically: return false
         case .rotateCounterclockwise, .rotateClockwise, .rotateClockwiseAndFlipVertically,
-            .rotateClockwiseAndFlipHorizontally:
+                .rotateClockwiseAndFlipHorizontally:
             return true
         }
     }
@@ -56,12 +56,30 @@ public enum Rotation {
 
 class MetalTexture {
     public var orientation: ImageOrientation
-
+    
     public let texture: MTLTexture
     
     init(orientation: ImageOrientation, texture: MTLTexture) {
         self.orientation = orientation
         self.texture = texture
+    }
+    
+    init(orientation: ImageOrientation , pixelFormat: MTLPixelFormat = .bgra8Unorm, width: Int , height: Int) {
+        let textureDescriptor = MTLTextureDescriptor.texture2DDescriptor(
+            pixelFormat: pixelFormat,
+            width: width,
+            height: height,
+            mipmapped: false)
+        textureDescriptor.usage = [.renderTarget, .shaderRead, .shaderWrite]
+        guard
+            let newTexture = MetalManager.shared.device.makeTexture(
+                descriptor: textureDescriptor)
+        else {
+            fatalError("Could not create texture of size: (\(width), \(height))")
+        }
+        self.orientation = orientation
+        self.texture = newTexture
+        
     }
 }
 
