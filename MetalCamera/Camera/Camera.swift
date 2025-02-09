@@ -50,6 +50,12 @@ class Camera : NSObject , Producer{
         label: "cameraFrameProcessingQueue",
         attributes: [])
     
+    var cameraPreset : AVCaptureSession.Preset{
+        get {
+            captureSession.sessionPreset
+        }
+    }
+    
     init(sessionPreset: AVCaptureSession.Preset , location: PhysicalCameraLocation = .backFacing) throws{
         self.location = location
         self.captureSession = AVCaptureSession()
@@ -128,7 +134,7 @@ extension Camera : AVCaptureVideoDataOutputSampleBufferDelegate {
         let cameraFrame = CMSampleBufferGetImageBuffer(sampleBuffer)!
         let bufferWidth = CVPixelBufferGetWidth(cameraFrame)
         let bufferHeight = CVPixelBufferGetHeight(cameraFrame)
-        
+
         CVPixelBufferLockBaseAddress(
             cameraFrame, CVPixelBufferLockFlags(rawValue: CVOptionFlags(0)))
         
