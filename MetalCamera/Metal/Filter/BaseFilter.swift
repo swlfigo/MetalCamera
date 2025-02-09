@@ -17,8 +17,9 @@ public func defaultVertexFunctionNameForInputs(_ inputCount: UInt) -> String {
     }
 }
 
-class BaseFilter : Producer  {
+class BaseFilter : Producer , Consumer {
     var targets = TargetContainer()
+
     
     let renderPipelineState: MTLRenderPipelineState
     let operationName: String = #file
@@ -50,10 +51,14 @@ class BaseFilter : Producer  {
         }
     }
     
-}
-
-
-extension BaseFilter : Consumer{
+    func internalRenderFunction(commandBuffer: MTLCommandBuffer, outputTexture: MetalTexture) {
+        commandBuffer.renderQuad(
+            pipelineState: renderPipelineState,
+            inputTextures: inputTextures,
+            useNormalizedTextureCoordinates: useNormalizedTextureCoordinates,
+            outputTexture: outputTexture)
+    }
+    
     func newTextureAvailable(_ texture: MetalTexture) {
         let _ = textureInputSemaphore.wait(timeout: DispatchTime.distantFuture)
         defer {
@@ -80,20 +85,14 @@ extension BaseFilter : Consumer{
             orientation: .portrait,
             width: outputWidth, height: outputHeight
         )
+
         internalRenderFunction(commandBuffer: commandBuffer, outputTexture: outputTexture)
         commandBuffer.commit()
         textureInputSemaphore.signal()
         updateTargetsWithTexture(outputTexture)
         let _ = textureInputSemaphore.wait(timeout: DispatchTime.distantFuture)
     }
-    
-    
-    func internalRenderFunction(commandBuffer: MTLCommandBuffer, outputTexture: MetalTexture) {
-        commandBuffer.renderQuad(
-            pipelineState: renderPipelineState,
-            inputTextures: inputTextures,
-            useNormalizedTextureCoordinates: useNormalizedTextureCoordinates,
-            outputTexture: outputTexture)
-    }
 }
+
+
 

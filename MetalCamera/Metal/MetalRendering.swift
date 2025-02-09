@@ -27,7 +27,7 @@ extension MTLCommandBuffer {
 
         let renderPass = MTLRenderPassDescriptor()
         renderPass.colorAttachments[0].texture = outputTexture.texture
-        renderPass.colorAttachments[0].clearColor = MTLClearColorMake(1, 0, 0, 1)
+        renderPass.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 0, 1)
         renderPass.colorAttachments[0].storeAction = .store
         renderPass.colorAttachments[0].loadAction = .clear
 
