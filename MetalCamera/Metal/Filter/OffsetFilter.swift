@@ -7,8 +7,8 @@
 import Foundation
 import Metal
 
-class CropFilter : BaseFilter {
-    //用于裁剪纹理使其居中在屏幕
+class OffsetFilter : BaseFilter {
+    //用于输入纹理在输出纹理上移动
 
     //Frame的定义为
     //originX 为Cropfilter的输入纹理在输出纹理左右偏移的百分比，百分比是基于输出纹理的宽度计算

@@ -11,7 +11,7 @@ class ViewController: UIViewController {
 
     let renderView = RenderMTKView()
     let baseFilter = BaseFilter(fragmentFunctionName: "passthroughFragment")
-    let cropFilter = CropFilter(fragmentFunctionName: "passthroughFragment")
+    let cropFilter = OffsetFilter(fragmentFunctionName: "passthroughFragment")
 
     var camera : Camera!
     
@@ -22,7 +22,7 @@ class ViewController: UIViewController {
 
         self.view.addSubview(renderView)
         do {
-            camera = try Camera(sessionPreset: .photo , location: .frontFacing)
+            camera = try Camera(sessionPreset: .hd1920x1080 , location: .frontFacing)
             
             if camera.cameraPreset == .photo {
                 camera.addTarget(cropFilter)
