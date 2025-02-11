@@ -90,9 +90,9 @@ class Cropfilter : BaseFilter {
         
 
         let left = Float(cropRegion.origin.x)
-        let right = left + (Float(cropRegion.width) / contentSizeWidth) * 2
+        let right = left + Float(contentSizeWidth) / Float(cropRegion.width) * 2
         let top = Float(cropRegion.origin.y)
-        let bottom = top - (Float(cropRegion.height) / contentSizeHeight ) * 2
+        let bottom = top - (Float(contentSizeHeight) / contentSizeHeight ) * 2
 
                                                                      
         cropVertext = [left,top,right,top,left,bottom,right,bottom]
