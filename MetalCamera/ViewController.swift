@@ -27,15 +27,15 @@ class ViewController: UIViewController {
             offsetFilter.outputFrame = CGRectMake(0, topGap, self.view.frame.width * UIScreen.main.nativeScale, self.view.frame.height * UIScreen.main.nativeScale)
             if camera.cameraPreset == .photo {
                 //4:3 display on 16:9
-//                camera.addTarget(offsetFilter)
-//                offsetFilter.addTarget(renderView)
+                camera.addTarget(offsetFilter)
+                offsetFilter.addTarget(renderView)
                 
                 //1:1
                 
-                camera.addTarget(cropFilter)
-                cropFilter.cropRegion = .init(x: -1, y: 1.125, width: 1080, height: 1080)
-                cropFilter.addTarget(offsetFilter)
-                offsetFilter.addTarget(renderView)
+//                camera.addTarget(cropFilter)
+//                cropFilter.cropRegion = .init(x: -1, y: 1.125, width: 1080, height: 1080)
+//                cropFilter.addTarget(offsetFilter)
+//                offsetFilter.addTarget(renderView)
                 
 
                 
@@ -46,8 +46,9 @@ class ViewController: UIViewController {
             
 
             
-
-            self.camera.startCapture()
+            DispatchQueue.global(qos: .background).async {
+                self.camera.startCapture()
+            }
 
             
         } catch {
