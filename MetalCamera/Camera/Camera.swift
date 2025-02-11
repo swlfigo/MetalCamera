@@ -7,7 +7,11 @@
 
 import Foundation
 import AVFoundation
+import Vision
 
+
+let FaceLandmarkKey = "FaceLandmarkKey"
+let CameraPhysicalPositionKey = "CameraPhysicalPositionKey"
 
 public enum PhysicalCameraLocation {
     case backFacing
@@ -38,11 +42,15 @@ class Camera : NSObject , Producer{
     let targets =  TargetContainer()
     var location: PhysicalCameraLocation
     
+    var enableFaceDetect = false
+    
     let captureSession: AVCaptureSession
     let inputCamera: AVCaptureDevice!
     let videoInput : AVCaptureDeviceInput!
     let videoOutput: AVCaptureVideoDataOutput!
     var videoTextureCache: CVMetalTextureCache?
+    
+    var faceLandmark : [CGRect] = []
     
     let frameRenderingSemaphore = DispatchSemaphore(value: 1)
     let cameraProcessingQueue = DispatchQueue.global()
@@ -138,9 +146,11 @@ extension Camera : AVCaptureVideoDataOutputSampleBufferDelegate {
         CVPixelBufferLockBaseAddress(
             cameraFrame, CVPixelBufferLockFlags(rawValue: CVOptionFlags(0)))
         
-        cameraFrameProcessingQueue.async {
+        cameraFrameProcessingQueue.async {[weak self] in
+            guard let self = self else { return }
             CVPixelBufferUnlockBaseAddress(
                 cameraFrame, CVPixelBufferLockFlags(rawValue: CVOptionFlags(0)))
+            
             var texture : MetalTexture?
             var textureRef: CVMetalTexture? = nil
             let _ = CVMetalTextureCacheCreateTextureFromImage(
@@ -153,14 +163,65 @@ extension Camera : AVCaptureVideoDataOutputSampleBufferDelegate {
                     texture: cameraTexture
                 )
             }
+            if enableFaceDetect {
+                self.detectFace(in: cameraFrame)
+            }
 //            let startTime = CFAbsoluteTimeGetCurrent()
+            self.updateTargetsWithParams([FaceLandmarkKey:self.faceLandmark , CameraPhysicalPositionKey : location])
             if let t = texture {
                 self.updateTargetsWithTexture(t)
             }
             //Test Filter Chain Time
 //            let currentFrameTime = (CFAbsoluteTimeGetCurrent() - startTime)
 //            print(currentFrameTime)
+            
+            
             self.frameRenderingSemaphore.signal()
+        }
+    }
+}
+
+extension Camera {
+    private func detectFace(in image: CVPixelBuffer) {
+        let faceDetectionRequest = VNDetectFaceLandmarksRequest { [weak self] request, error in
+            guard let self = self else { return }
+            guard error == nil else {
+                print("人脸检测错误: \(error!.localizedDescription)")
+                return
+            }
+            
+            self.handleFaceDetectionResults(request.results as? [VNFaceObservation] ?? [])
+        }
+        
+        let imageRequestHandler = VNImageRequestHandler(cvPixelBuffer: image, orientation: location == .frontFacing ? .leftMirrored : .rightMirrored)
+        
+        do {
+            try imageRequestHandler.perform([faceDetectionRequest])
+        } catch let e {
+            print("Error:\(e)")
+        }
+    }
+    
+    private func handleFaceDetectionResults(_ results: [VNFaceObservation]) {
+        faceLandmark = []
+        for faceObservation in results {
+            
+            faceLandmark.append(faceObservation.boundingBox)
+            // 如果有面部特征点，绘制关键点
+            if let landmarks = faceObservation.landmarks {
+//                print("""
+//                LeftEye:\(String(describing: landmarks.leftEye?.normalizedPoints))
+//                RightEye:\(String(describing: landmarks.rightEye?.normalizedPoints))
+//
+// """)
+//                landmarks.leftEye?.normalizedPoints,
+//                          landmarks.rightEye?.normalizedPoints,
+//                          landmarks.leftEyebrow?.normalizedPoints,
+//                          landmarks.rightEyebrow?.normalizedPoints,
+//                          landmarks.nose?.normalizedPoints,
+//                          landmarks.outerLips?.normalizedPoints,
+//                          landmarks.innerLips?.normalizedPoints
+            }
         }
     }
 }
