@@ -28,6 +28,8 @@ class BaseFilter : Producer , Consumer {
     let textureInputSemaphore = DispatchSemaphore(value: 1)
     var useNormalizedTextureCoordinates = true
     
+    var textureCoordinate = standardImageVertices
+    
     init(vertexFunctionName: String? = nil, fragmentFunctionName: String , numberOfInputs: UInt = 1) {
         let concreteVertexFunctionName =
         vertexFunctionName ?? defaultVertexFunctionNameForInputs(numberOfInputs)
@@ -56,7 +58,12 @@ class BaseFilter : Producer , Consumer {
             pipelineState: renderPipelineState,
             inputTextures: inputTextures,
             useNormalizedTextureCoordinates: useNormalizedTextureCoordinates,
+            imageVertices: textureCoordinate ,
             outputTexture: outputTexture)
+    }
+    
+    func newInputParamsAvailable(_ inputParams: [String : Any]) {
+        
     }
     
     func newTextureAvailable(_ texture: MetalTexture) {
@@ -65,11 +72,25 @@ class BaseFilter : Producer , Consumer {
             textureInputSemaphore.signal()
         }
         
-        inputTextures[0] = texture
+        guard let commandBuffer = MetalManager.shared.commandQueue.makeCommandBuffer()
+        else { return }
+        
+        let outputTexture = generateOutputTexture(texture)
+        
+        internalRenderFunction(commandBuffer: commandBuffer, outputTexture: outputTexture)
+        commandBuffer.commit()
+        textureInputSemaphore.signal()
+        updateTargetsWithTexture(outputTexture)
+        let _ = textureInputSemaphore.wait(timeout: DispatchTime.distantFuture)
+    }
+    
+    
+    func generateOutputTexture(_ inputTexture:MetalTexture) -> MetalTexture {
+        inputTextures[0] = inputTexture
         
         let outputWidth: Int
         let outputHeight: Int
-        let firstInputTexture = texture
+        let firstInputTexture = inputTexture
         if firstInputTexture.orientation.rotationNeeded(for: .portrait).flipsDimensions() {
             outputWidth = firstInputTexture.texture.height
             outputHeight = firstInputTexture.texture.width
@@ -78,19 +99,14 @@ class BaseFilter : Producer , Consumer {
             outputHeight = firstInputTexture.texture.height
         }
         
-        guard let commandBuffer = MetalManager.shared.commandQueue.makeCommandBuffer()
-        else { return }
+
         
         let outputTexture = MetalTexture(
             orientation: .portrait,
             width: outputWidth, height: outputHeight
         )
-
-        internalRenderFunction(commandBuffer: commandBuffer, outputTexture: outputTexture)
-        commandBuffer.commit()
-        textureInputSemaphore.signal()
-        updateTargetsWithTexture(outputTexture)
-        let _ = textureInputSemaphore.wait(timeout: DispatchTime.distantFuture)
+        
+        return outputTexture
     }
 }
 

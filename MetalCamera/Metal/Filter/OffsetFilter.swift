@@ -24,32 +24,12 @@ class OffsetFilter : BaseFilter {
     //因为纹理坐标是-1-1,+2是因为入参时候方便设置，不需要设置负数换算,则直接在内部做好换算
     var outputFrame : CGRect = .zero
     
-    private var cropVertext = standardImageVertices
-    
-    override func internalRenderFunction(commandBuffer: any MTLCommandBuffer, outputTexture: MetalTexture) {
-        commandBuffer.renderQuad(
-            pipelineState: renderPipelineState,
-            inputTextures: inputTextures,
-            useNormalizedTextureCoordinates: useNormalizedTextureCoordinates, imageVertices: cropVertext,
-            outputTexture: outputTexture)
-        
-    }
-    
-    override func newTextureAvailable(_ texture: MetalTexture) {
-        let _ = textureInputSemaphore.wait(timeout: DispatchTime.distantFuture)
-        defer {
-            textureInputSemaphore.signal()
-        }
-        
-        
-        guard let commandBuffer = MetalManager.shared.commandQueue.makeCommandBuffer()
-        else { return }
-        
-        inputTextures[0] = texture
+    override func generateOutputTexture(_ inputTexture: MetalTexture) -> MetalTexture {
+        inputTextures[0] = inputTexture
         let outputWidth: Int
         let outputHeight: Int
-        if  outputFrame.equalTo(.zero) {
-            let firstInputTexture = texture
+        if outputFrame.equalTo(.zero) {
+            let firstInputTexture = inputTexture
             if firstInputTexture.orientation.rotationNeeded(for: .portrait).flipsDimensions() {
                 outputWidth = firstInputTexture.texture.height
                 outputHeight = firstInputTexture.texture.width
@@ -87,21 +67,16 @@ class OffsetFilter : BaseFilter {
             let right =  left + contentSizeWidth  / Float(outputFrame.width) * 2
             let top =  (2 - (Float(outputFrame.origin.y) * Float(outputFrame.height)) / Float(outputFrame.height) * 2 ) - 1
             let bottom =  top - (Float(contentSizeHeight) / Float(outputFrame.height) * 2)
-            cropVertext = [left,top,right,top,left,bottom,right,bottom]
+            textureCoordinate = [left,top,right,top,left,bottom,right,bottom]
         }else {
             outputTexture = MetalTexture(
                 orientation: .portrait,
                 width: outputWidth, height: outputHeight
             )
         }
-        
-        
-        internalRenderFunction(commandBuffer: commandBuffer, outputTexture: outputTexture)
-        commandBuffer.commit()
-        textureInputSemaphore.signal()
-        updateTargetsWithTexture(outputTexture)
-        let _ = textureInputSemaphore.wait(timeout: DispatchTime.distantFuture)
+        return outputTexture
     }
+    
 }
 
 

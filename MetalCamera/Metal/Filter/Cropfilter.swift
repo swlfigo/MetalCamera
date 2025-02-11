@@ -42,37 +42,9 @@ class Cropfilter : BaseFilter {
     //(left,top,cropWidth,cropHeight)
     //则cropRegion的输入应该为(-1,1.125,1080,1440)
     var cropRegion : CGRect = .zero
-
     
-    private var cropVertext = standardImageVertices
-    
-    override func internalRenderFunction(commandBuffer: any MTLCommandBuffer, outputTexture: MetalTexture) {
-        commandBuffer.renderQuad(
-            pipelineState: renderPipelineState,
-            inputTextures: inputTextures,
-            useNormalizedTextureCoordinates: useNormalizedTextureCoordinates, imageVertices: cropVertext,
-            outputTexture: outputTexture)
-        
-    }
-    
-    override func newTextureAvailable(_ texture: MetalTexture) {
-        let _ = textureInputSemaphore.wait(timeout: DispatchTime.distantFuture)
-        defer {
-            textureInputSemaphore.signal()
-        }
-        
-        
-        guard let commandBuffer = MetalManager.shared.commandQueue.makeCommandBuffer()
-        else { return }
-        
-
-        if cropRegion.equalTo(.zero) {
-            fatalError("Should Set CropRegion First")
-        }
-        
-        inputTextures[0] = texture
-        
-        
+    override func generateOutputTexture(_ inputTexture: MetalTexture) -> MetalTexture {
+        inputTextures[0] = inputTexture
         
         let outputTexture = MetalTexture(
             orientation: .portrait,
@@ -93,15 +65,10 @@ class Cropfilter : BaseFilter {
         let right = left + Float(contentSizeWidth) / Float(cropRegion.width) * 2
         let top = Float(cropRegion.origin.y)
         let bottom = top - (Float(contentSizeHeight) / contentSizeHeight ) * 2
-
-                                                                     
-        cropVertext = [left,top,right,top,left,bottom,right,bottom]
         
+        textureCoordinate = [left,top,right,top,left,bottom,right,bottom]
         
-        internalRenderFunction(commandBuffer: commandBuffer, outputTexture: outputTexture)
-        commandBuffer.commit()
-        textureInputSemaphore.signal()
-        updateTargetsWithTexture(outputTexture)
-        let _ = textureInputSemaphore.wait(timeout: DispatchTime.distantFuture)
+        return outputTexture
     }
+    
 }
