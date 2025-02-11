@@ -61,24 +61,39 @@ class OffsetFilter : BaseFilter {
             outputWidth = Int(outputFrame.size.width)
             outputHeight = Int(outputFrame.size.height)
         }
-
+        
         
         let outputTexture : MetalTexture
-       
-        if outputFrame.equalTo(.zero) {
-            fatalError("Should Set Output Frame First")
+        
+        if !outputFrame.equalTo(.zero) {
+            //计算相对坐标
+            let firstInputTexture = inputTextures[0]!
+            
+            var contentSizeWidth : Float = Float(firstInputTexture.texture.width)
+            var contentSizeHeight : Float = Float(firstInputTexture.texture.height)
+            if firstInputTexture.orientation.rotationNeeded(for: .portrait).flipsDimensions() {
+                contentSizeWidth = Float(firstInputTexture.texture.height)
+                contentSizeHeight = Float(firstInputTexture.texture.width)
+            } else {
+                contentSizeWidth = Float(outputFrame.size.height)
+                contentSizeHeight = Float(firstInputTexture.texture.height)
+            }
+            outputTexture = MetalTexture(
+                orientation: .portrait,
+                width: Int(outputWidth), height: Int(outputHeight)
+            )
+            
+            let left =  -1 + Float (outputFrame.origin.x ) * 2
+            let right =  left + contentSizeWidth  / Float(outputFrame.width) * 2
+            let top =  2 * (1.0 - Float(outputFrame.origin.y)) - 1
+            let bottom =  2 * (1.0 - Float(outputFrame.origin.y)) - contentSizeHeight / Float(outputFrame.height) * 2 - 1
+            cropVertext = [left,top,right,top,left,bottom,right,bottom]
+        }else {
+            outputTexture = MetalTexture(
+                orientation: .portrait,
+                width: outputWidth, height: outputHeight
+            )
         }
-
-        outputTexture = MetalTexture(
-            orientation: .portrait,
-            width: Int(outputWidth), height: Int(outputHeight)
-        )
-
-        let left = Float (outputFrame.origin.x - 1 )
-        let right = left + 2
-        let top =  2 * (1.0 - Float(outputFrame.origin.y)) - 1
-        let bottom =  top - 2
-        cropVertext = [left,top,right,top,left,bottom,right,bottom]
         
         
         internalRenderFunction(commandBuffer: commandBuffer, outputTexture: outputTexture)
