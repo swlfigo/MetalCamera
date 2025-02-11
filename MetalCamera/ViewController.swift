@@ -12,6 +12,7 @@ class ViewController: UIViewController {
     let renderView = RenderMTKView()
     let baseFilter = BaseFilter(fragmentFunctionName: "passthroughFragment")
     let offsetFilter = OffsetFilter(fragmentFunctionName: "passthroughFragment")
+    let faceRectangleFilter = FaceRectangleFilter(fragmentFunctionName: "passthroughFragment")
     let cropFilter = Cropfilter(fragmentFunctionName: "passthroughFragment")
     var camera : Camera!
     
@@ -31,12 +32,16 @@ class ViewController: UIViewController {
 //                offsetFilter.addTarget(renderView)
                 
                 //1:1
-                camera.addTarget(cropFilter)
-                cropFilter.cropRegion = .init(x: -1, y: 1.125, width: self.view.frame.width * UIScreen.main.nativeScale, height: self.view.frame.width * UIScreen.main.nativeScale)
-                cropFilter.addTarget(offsetFilter)
+//                camera.addTarget(cropFilter)
+//                cropFilter.cropRegion = .init(x: -1, y: 1.125, width: self.view.frame.width * UIScreen.main.nativeScale, height: self.view.frame.width * UIScreen.main.nativeScale)
+//                cropFilter.addTarget(offsetFilter)
+//                offsetFilter.addTarget(renderView)
+
+                //Face Recognize
+                camera.enableFaceDetect = true
+                camera.addTarget(faceRectangleFilter)
+                faceRectangleFilter.addTarget(offsetFilter)
                 offsetFilter.addTarget(renderView)
-//                cropFilter.addTarget(renderView)
-                
 
                 
             }else {
