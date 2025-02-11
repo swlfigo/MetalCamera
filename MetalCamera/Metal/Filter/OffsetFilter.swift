@@ -75,7 +75,7 @@ class OffsetFilter : BaseFilter {
                 contentSizeWidth = Float(firstInputTexture.texture.height)
                 contentSizeHeight = Float(firstInputTexture.texture.width)
             } else {
-                contentSizeWidth = Float(outputFrame.size.height)
+                contentSizeWidth = Float(firstInputTexture.texture.width)
                 contentSizeHeight = Float(firstInputTexture.texture.height)
             }
             outputTexture = MetalTexture(
@@ -85,8 +85,8 @@ class OffsetFilter : BaseFilter {
             
             let left =  -1 + Float (outputFrame.origin.x ) * 2
             let right =  left + contentSizeWidth  / Float(outputFrame.width) * 2
-            let top =  2 * (1.0 - Float(outputFrame.origin.y)) - 1
-            let bottom =  2 * (1.0 - Float(outputFrame.origin.y)) - contentSizeHeight / Float(outputFrame.height) * 2 - 1
+            let top =  (2 - (Float(outputFrame.origin.y) * Float(outputFrame.height)) / Float(outputFrame.height) * 2 ) - 1
+            let bottom =  top - (Float(contentSizeHeight) / Float(outputFrame.height) * 2)
             cropVertext = [left,top,right,top,left,bottom,right,bottom]
         }else {
             outputTexture = MetalTexture(
