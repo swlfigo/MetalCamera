@@ -15,6 +15,12 @@ extension Producer {
         targets.append(target)
     }
     
+    func updateTargetsWithParams(_ params:[String:Any] = [:]) {
+        targets.targets.forEach { weakConsumer in
+            weakConsumer.value?.newInputParamsAvailable(params)
+        }
+    }
+    
     func updateTargetsWithTexture(_ texture: MetalTexture) {
         targets.targets.forEach { weakConsumer in
             weakConsumer.value?.newTextureAvailable(texture)
@@ -24,6 +30,11 @@ extension Producer {
 
 
 protocol Consumer : AnyObject {
+    
+    var inputParams : [String:Any] {get}
+    
+    func newInputParamsAvailable(_ inputParams: [String:Any])
+    
     func newTextureAvailable(_ texture: MetalTexture)
 }
 

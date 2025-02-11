@@ -19,7 +19,7 @@ public func defaultVertexFunctionNameForInputs(_ inputCount: UInt) -> String {
 
 class BaseFilter : Producer , Consumer {
     var targets = TargetContainer()
-
+    var inputParams: [String : Any] = [:]
     
     let renderPipelineState: MTLRenderPipelineState
     let operationName: String = #file
@@ -63,7 +63,7 @@ class BaseFilter : Producer , Consumer {
     }
     
     func newInputParamsAvailable(_ inputParams: [String : Any]) {
-        
+        self.inputParams = inputParams
     }
     
     func newTextureAvailable(_ texture: MetalTexture) {
@@ -80,6 +80,7 @@ class BaseFilter : Producer , Consumer {
         internalRenderFunction(commandBuffer: commandBuffer, outputTexture: outputTexture)
         commandBuffer.commit()
         textureInputSemaphore.signal()
+        updateTargetsWithParams(self.inputParams)
         updateTargetsWithTexture(outputTexture)
         let _ = textureInputSemaphore.wait(timeout: DispatchTime.distantFuture)
     }

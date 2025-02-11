@@ -7,7 +7,8 @@
 
 import MetalKit
 
-class RenderMTKView :  MTKView {
+class RenderMTKView :  MTKView , Consumer {
+    var inputParams: [String : Any] = [:]
     var currentTexture : MetalTexture?
     var renderPipelineState : MTLRenderPipelineState!
     
@@ -59,13 +60,18 @@ class RenderMTKView :  MTKView {
     
 }
 
-extension RenderMTKView : Consumer  {
+extension RenderMTKView  {
+    
+    
     func newTextureAvailable(_ texture: MetalTexture) {
         self.drawableSize = CGSize(width: texture.texture.width, height: texture.texture.height)
         currentTexture = texture
         self.draw()
     }
     
+    func newInputParamsAvailable(_ inputParams: [String : Any]) {
+        
+    }
     
     override func draw(_ rect: CGRect) {
         if let currentDrawable = self.currentDrawable , let imageTexture = self.currentTexture {
