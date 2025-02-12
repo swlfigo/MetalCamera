@@ -14,6 +14,7 @@ class ViewController: UIViewController {
     let offsetFilter = OffsetFilter(fragmentFunctionName: "passthroughFragment")
     let faceRectangleFilter = FaceRectangleFilter(fragmentFunctionName: "passthroughFragment")
     let cropFilter = Cropfilter(fragmentFunctionName: "passthroughFragment")
+    let brightnessFilter = BrightnessAdjustmentFilter(0)
     var camera : Camera!
     
     override func viewDidLoad() {
@@ -40,7 +41,8 @@ class ViewController: UIViewController {
                 //Face Recognize
                 camera.enableFaceDetect = true
                 camera.addTarget(faceRectangleFilter)
-                faceRectangleFilter.addTarget(offsetFilter)
+                faceRectangleFilter.addTarget(brightnessFilter)
+                brightnessFilter.addTarget(offsetFilter)
                 offsetFilter.addTarget(renderView)
 
                 
@@ -59,8 +61,18 @@ class ViewController: UIViewController {
         } catch {
             fatalError("Can't Create Camera")
         }
+        
+        
+        let valueSlider = UISlider.init(frame: .init(x: 20, y: self.view.frame.height - 100, width: self.view.frame.width - 40, height: 20))
+        self.view.addSubview(valueSlider)
+        valueSlider.maximumValue = 1.0
+        valueSlider.minimumValue = 0.0
+        valueSlider.addTarget(self, action: #selector(sliderValueChange), for: .valueChanged)
     }
-
+    
+    @objc func sliderValueChange(_ slider:UISlider) {
+        brightnessFilter.brightness = slider.value
+    }
 
 }
 
