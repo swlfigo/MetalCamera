@@ -79,7 +79,7 @@ class FaceRectangleFilter: BaseFilter {
         }
         
         renderEncoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
-        
+        uniformSettings.restoreShaderSettings(renderEncoder: renderEncoder)
         drawRectangle(renderEncoder: renderEncoder)
         
         renderEncoder.endEncoding()

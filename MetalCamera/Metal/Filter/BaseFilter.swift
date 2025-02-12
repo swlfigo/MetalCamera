@@ -29,6 +29,7 @@ class BaseFilter : Producer , Consumer {
     var useNormalizedTextureCoordinates = true
     
     var textureCoordinate = standardImageVertices
+    var uniformSettings: ShaderUniformSettings
     
     init(vertexFunctionName: String? = nil, fragmentFunctionName: String , numberOfInputs: UInt = 1) {
         let concreteVertexFunctionName =
@@ -51,11 +52,41 @@ class BaseFilter : Producer , Consumer {
         } catch  {
             fatalError("Can't create renderPipelineState")
         }
+        
+        //Get Fragment Shader Params
+        do {
+            var reflection: MTLAutoreleasedRenderPipelineReflection?
+            let pipelineState = try MetalManager.shared.device.makeRenderPipelineState(
+                descriptor: descriptor, options: [.bufferTypeInfo, .argumentInfo],
+                reflection: &reflection)
+            
+            var uniformLookupTable: [String: (Int, MTLStructMember)] = [:]
+            var bufferSize: Int = 0
+            if let fragmentArguments = reflection?.fragmentArguments {
+                for fragmentArgument in fragmentArguments where fragmentArgument.type == .buffer {
+                    if fragmentArgument.bufferDataType == .struct,
+                       let members = fragmentArgument.bufferStructType?.members.enumerated()
+                    {
+                        bufferSize = fragmentArgument.bufferDataSize
+                        for (index, uniform) in members {
+                            uniformLookupTable[uniform.name] = (index, uniform)
+                        }
+                    }
+                }
+            }
+            
+            uniformSettings = ShaderUniformSettings(
+                uniformLookupTable: uniformLookupTable, bufferSize: bufferSize)
+            
+        } catch {
+            fatalError("Could Not Read Fragment Params")
+        }
     }
     
     func internalRenderFunction(commandBuffer: MTLCommandBuffer, outputTexture: MetalTexture) {
         commandBuffer.renderQuad(
             pipelineState: renderPipelineState,
+            uniformSettings: uniformSettings,
             inputTextures: inputTextures,
             useNormalizedTextureCoordinates: useNormalizedTextureCoordinates,
             imageVertices: textureCoordinate ,

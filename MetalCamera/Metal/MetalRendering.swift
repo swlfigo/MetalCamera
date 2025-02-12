@@ -15,6 +15,7 @@ public let standardImageVertices: [Float] = [-1.0, 1.0, 1.0, 1.0, -1.0, -1.0, 1.
 extension MTLCommandBuffer {
     func renderQuad(
         pipelineState: MTLRenderPipelineState,
+        uniformSettings: ShaderUniformSettings? = nil,
         inputTextures: [UInt: MetalTexture], useNormalizedTextureCoordinates: Bool = true,
         imageVertices: [Float] = standardImageVertices, outputTexture: MetalTexture,
         outputOrientation: ImageOrientation = .portrait
@@ -52,7 +53,7 @@ extension MTLCommandBuffer {
             renderEncoder.setVertexBuffer(textureBuffer, offset: 0, index: 1 + textureIndex)
             renderEncoder.setFragmentTexture(currentTexture.texture, index: textureIndex)
         }
-        
+        uniformSettings?.restoreShaderSettings(renderEncoder: renderEncoder)
         renderEncoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: 4)
         renderEncoder.endEncoding()
     }
